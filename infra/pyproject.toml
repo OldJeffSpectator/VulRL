@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cve-exploit-rl"
+version = "1.0.0"
+description = "CVE Exploit RL Training and Testing System"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+
+dependencies = [
+    # Training dependencies
+    "torch>=2.0.0",
+    "transformers>=4.40.0",
+    "peft>=0.10.0",
+    "pandas>=2.0.0",
+    "pyarrow>=15.0.0",
+    "pyyaml>=6.0",
+    "docker>=7.0.0",
+    "requests>=2.31.0",
+    "Pillow>=10.0.0",
+
+    # Inspect AI dependencies (for testing)
+    "inspect-ai>=0.3.103",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+
+test = [
+    "inspect-ai>=0.3.103",
+    "inspect-cyber>=0.1.0",
+]
+
+[project.entry-points.inspect_ai]
+cve_exploit_rl = "infra._registry"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
