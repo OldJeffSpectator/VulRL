@@ -91,6 +91,9 @@ evidence/
 .docker/
 *.dockerignore
 
+# Xbow build guard files
+*/.xben_build_done
+
 # macOS
 .DS_Store
 .AppleDouble
