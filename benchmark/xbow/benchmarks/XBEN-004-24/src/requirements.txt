@@ -1,0 +1,3 @@
+# Flask==1.1.4 # flask only supports python2 before 1.0 (inclusive)
+Flask==1.0
+phantomjs

@@ -1,0 +1,142 @@
+# Custom workspace
+.local_workspace/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Ray
+ray_tmp/
+/tmp/ray*
+
+# Checkpoints and model outputs
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+
+# Training outputs
+wandb/
+*.log
+logs/
+runs/
+
+# Dataset cache
+*.parquet
+*.arrow
+*.cache
+dataset/cve_vulhub/*.parquet
+dataset/cve_vulhub/*.jsonl
+
+# Evaluation results
+eval_results/
+infra/eval_results/
+
+# LLM cache
+/tmp/llm1_cache/
+llm1_cache/
+
+# Screenshots and evidence
+screenshots/
+evidence/
+*.png
+*.jpg
+*.jpeg
+
+# Docker
+.docker/
+*.dockerignore
+
+# Xbow build guard files
+*/.xben_build_done
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.nfs*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.*.sw?
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/
+
+# UV lock files (optional - uncomment if you want to ignore)
+# uv.lock
+
+# Large binary files
+*.tar.gz
+*.zip
+*.iso
+*.dmg
