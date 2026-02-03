@@ -408,12 +408,12 @@ CMD ["tail", "-f", "/dev/null"]
         command = args.get("command", "")
         if not command:
             return "Error: No command provided"
-        
+
         # 限制命令长度
         if len(command) > 5000:
             command = command[:5000]
             return "Error: Command too long (max 5000 characters)"
-        
+
         try:
             if self.attacker_container:
                 # 在容器内执行
@@ -421,16 +421,16 @@ CMD ["tail", "-f", "/dev/null"]
                     ["bash", "-c", command],
                     demux=True
                 )
-                
+
                 stdout = exec_result.output[0].decode() if exec_result.output[0] else ""
                 stderr = exec_result.output[1].decode() if exec_result.output[1] else ""
-                
+
                 # 限制输出长度
                 if len(stdout) > 10000:
                     stdout = stdout[:10000] + "\n... (output truncated)"
                 if len(stderr) > 10000:
                     stderr = stderr[:10000] + "\n... (output truncated)"
-                
+
                 output = f"Exit: {exec_result.exit_code}\n"
                 if stdout:
                     output += f"STDOUT:\n{stdout}\n"
@@ -451,7 +451,7 @@ CMD ["tail", "-f", "/dev/null"]
             return "Error: Command timeout"
         except Exception as e:
             return f"Error: {str(e)}"
-    
+
     def _execute_http(self, args: Dict) -> str:
         """执行 HTTP 请求"""
         method = args.get("method", "GET").upper()
@@ -511,70 +511,3 @@ CMD ["tail", "-f", "/dev/null"]
                 return f"Status: {response.status_code}\nBody:\n{response.text[:2000]}"
         except Exception as e:
             return f"HTTP Error: {str(e)}"
-
-        """执行 HTTP 请求"""
-        method = args.get("method", "GET").upper()
-        url = args.get("url", "")
-        path = args.get("path", "")
-        headers = args.get("headers", {})
-        data = args.get("data")
-        json_data = args.get("json")
-        
-        # 拼接 URL
-        if path and not url:
-            url = self.service_url + path
-        
-        if not url:
-            return "Error: No URL provided"
-        
-        try:
-            if self.attacker_container:
-                # 使用 curl 在容器内执行
-                curl_cmd = [f"curl -X {method}"]
-                
-                # 添加 headers
-                for key, value in headers.items():
-                    curl_cmd.append(f'-H "{key}: {value}"')
-                
-                # 添加 data
-                if json_data:
-                    import json as json_module
-                    json_str = json_module.dumps(json_data)
-                    curl_cmd.append(f"-H 'Content-Type: application/json'")
-                    curl_cmd.append(f"-d '{json_str}'")
-                elif data:
-                    curl_cmd.append(f"-d '{data}'")
-                
-                # 添加 URL
-                curl_cmd.append(f'"{url}"')
-                
-                # 添加选项
-                curl_cmd.append("-i")  # 包含 headers
-                curl_cmd.append("-s")  # 静默模式
-                curl_cmd.append("--max-time 30")  # 超时
-                
-                full_cmd = " ".join(curl_cmd)
-                
-                exec_result = self.attacker_container.exec_run(
-                    ["bash", "-c", full_cmd],
-                    demux=True
-                )
-                
-                stdout = exec_result.output[0].decode() if exec_result.output[0] else ""
-                stderr = exec_result.output[1].decode() if exec_result.output[1] else ""
-                
-                # 限制输出长度
-                if len(stdout) > 10000:
-                    stdout = stdout[:10000] + "\n... (output truncated)"
-                
-                output = f"HTTP {method} {url}\n"
-                output += f"Exit: {exec_result.exit_code}\n"
-                if stdout:
-                    output += f"Response:\n{stdout}\n"
-                if stderr:
-                    output += f"STDERR:\n{stderr}"
-                return output
-            else:
-                return "Error: No attacker container available"
-        except Exception as e:
-            return f"Error: {str(e)}"
