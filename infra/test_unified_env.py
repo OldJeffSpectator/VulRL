@@ -366,8 +366,9 @@ def main():
 
     # Docker 测试（可能跳过）
     print("\n\n### Docker 环境测试 ###\n")
-    results["vulhub_adapter"] = test_vulhub_adapter()
-    results["ctf_adapter"] = test_ctf_adapter()
+    results["vulhub_adapter"] = test_vulhub_adapter()  # Temporarily commented out
+    results["ctf_adapter"] = test_ctf_adapter()  # Temporarily commented out
+    results["xbow_adapter"] = test_xbow_adapter()
 
     # 总结
     print("\n\n" + "=" * 70)
