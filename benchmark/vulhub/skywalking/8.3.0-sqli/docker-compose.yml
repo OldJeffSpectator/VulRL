@@ -7,8 +7,8 @@ services:
     image: vulhub/skywalking:8.3.0
     command: bash bin/web-server.sh
     depends_on:
-      - oap
+    - oap
     ports:
-      - 8080:8080
+    - 8080
     environment:
       COLLECTOR_RIBBON_LISTOFSERVERS: oap:12800
