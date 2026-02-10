@@ -7,15 +7,15 @@
 - [x] `README.md` - Project documentation
 - [x] `src/vulrl/__init__.py` - Main package init
 
-### ✅ Environment Module (env/): 100% done
-- [x] `env/__init__.py`
-- [x] `env/base/env_types.py` - Standard data structures
-- [x] `env/base/env_adapter.py` - Abstract adapter base class
-- [x] `env/docker_manager.py` - Centralized Docker operations
-- [x] `env/adapters/vulhub_adapter.py` - Vulhub environment adapter
-- [x] `env/adapters/cvebench_adapter.py` - CVE-bench environment adapter
-- [x] `env/adapters/xbow_adapter.py` - Xbow environment adapter
-- [x] `env/env_registry.py` - Adapter registration and factory
+### ✅ Environment Module (env_manage/): 100% done
+- [x] `env_manage/__init__.py`
+- [x] `env_manage/base/env_types.py` - Standard data structures
+- [x] `env_manage/base/env_adapter.py` - Abstract adapter base class
+- [x] `env_manage/docker_manager.py` - Centralized Docker operations
+- [x] `env_manage/adapters/vulhub_adapter.py` - Vulhub environment adapter
+- [x] `env_manage/adapters/cvebench_adapter.py` - CVE-bench environment adapter
+- [x] `env_manage/adapters/xbow_adapter.py` - Xbow environment adapter
+- [x] `env_manage/env_registry.py` - Adapter registration and factory
 
 ### ✅ Reward Module (reward/): 100% done (abstract structure)
 - [x] `reward/__init__.py`
@@ -46,8 +46,8 @@
 - [x] `loop_control/checkpoint_manager.py` - Checkpoint management
 
 ### ⏳ Environment Facades: 0% done
-- [ ] `env/security_env.py` - Main training environment (from infra/security_env.py)
-- [ ] `env/test_env.py` - Simplified evaluation environment
+- [ ] `env_manage/security_env.py` - Main training environment (from infra/security_env.py)
+- [ ] `env_manage/test_env.py` - Simplified evaluation environment
 
 ### ⏳ Utility Module (util/): 0% done
 - [ ] `util/__init__.py`
@@ -58,11 +58,11 @@
 - [ ] `util/prerequisite_checker.py` - Dependency checking
 - [ ] `util/environment_setup.py` - Environment preparation
 
-### ⏳ Scripts Module (scripts/): 0% done
-- [ ] `scripts/__init__.py`
-- [ ] `scripts/rl_launcher.py` - Training launcher (from infra/train_launcher.py)
-- [ ] `scripts/test_launcher.py` - Evaluation launcher (from infra/test_launcher.py)
-- [ ] `scripts/data_builder.py` - Dataset preparation
+### ✅ Scripts Module (scripts/): 100% done (core features)
+- [x] `scripts/__init__.py`
+- [x] `scripts/rl_launcher.py` - Training launcher with **parallel execution** ✨
+- [x] `scripts/test_launcher.py` - Evaluation launcher with **parallel execution** ✨
+- [ ] `scripts/data_builder.py` - Dataset preparation (optional)
 
 ### ⏳ Tests: 0% done
 - [ ] `tests/__init__.py`
@@ -84,7 +84,7 @@
 
 3. **Abstract Reward Structure**: Reward module provides abstract base classes with universal `compute()` interface. Implementations are left empty for future development.
 
-4. **Python Package Structure**: Using `pyproject.toml` for proper package management, enabling direct imports (`from vulrl.env import ...`) and eliminating file copying workarounds.
+4. **Python Package Structure**: Using `pyproject.toml` for proper package management, enabling direct imports (`from vulrl.env_manage import ...`) and eliminating file copying workarounds.
 
 5. **Configuration Management**: Separate config classes for environment, training, and reward settings with validation and factory functions.
 
@@ -92,9 +92,71 @@
 
 ## Next Steps
 
-1. Create environment facades (`security_env.py`, `test_env.py`)
-2. Create utility module files
-3. Create script files (launchers, data builder)
-4. Add tests
-5. Add documentation
-6. Update all `__init__.py` files with proper exports
+1. ~~**Create entry point scripts**~~ ✅ COMPLETE
+2. ~~**Add parallel execution**~~ ✅ COMPLETE
+3. **Create environment facades** (`security_env.py`, `test_env.py`) ← HIGH PRIORITY
+4. **Implement reward functions** (step, trajectory, visual) ← HIGH PRIORITY
+5. Create utility module files
+6. Add tests
+7. Update all `__init__.py` files with proper exports
+
+## Entry Points ✅ CREATED
+
+Entry points are now available in `infra_v3/src/vulrl/scripts/`:
+
+### Training Entry Point
+- **File**: `src/vulrl/scripts/rl_launcher.py`
+- **Usage**: `python -m vulrl.scripts.rl_launcher --task-type vulhub --task-id jenkins/CVE-2018-1000861`
+- **Features**:
+  - Prerequisite checking (SkyRL, Vulhub, Docker, data)
+  - Environment preparation (Docker image building, PYTHONPATH setup)
+  - Configuration building (training, environment, reward)
+  - SkyRL command construction
+  - Distributed training support
+
+### Evaluation Entry Point
+- **File**: `src/vulrl/scripts/test_launcher.py`
+- **Usage**: `python -m vulrl.scripts.test_launcher --checkpoint ~/checkpoints/vulrl_agent/global_step_100`
+- **Features**:
+  - CVE-bench setup and dependency installation
+  - Model provider registration
+  - Checkpoint discovery (auto-finds latest)
+  - Inspect AI integration
+  - Single challenge debugging mode
+  - Results saving and reporting
+  - **Parallel evaluation** across multiple challenges ✨
+
+## Parallel Execution Features ✨ NEW
+
+### Parallel Training
+```bash
+# Train on multiple CVEs simultaneously
+python -m vulrl.scripts.rl_launcher \
+    --task-ids-file tasks.txt \
+    --max-workers 4 \
+    --num-gpus 4
+```
+
+**Features**:
+- ProcessPoolExecutor for true parallel execution
+- Automatic GPU division among workers
+- Separate checkpoint directories per task
+- Aggregated summary report (JSON)
+- 4x speedup with 4 workers
+
+### Parallel Evaluation
+```bash
+# Evaluate multiple challenges simultaneously
+python -m vulrl.scripts.test_launcher \
+    --challenges CVE-2024-2624,CVE-2024-2771,CVE-2024-3094 \
+    --parallel \
+    --max-workers 3
+```
+
+**Features**:
+- ThreadPoolExecutor for I/O-bound Docker operations
+- Isolated Docker environments per challenge
+- Aggregated results (JSON)
+- 4x speedup with 4 workers
+
+**Documentation**: See `PARALLEL_EXECUTION.md` for complete guide
