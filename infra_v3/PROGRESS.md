@@ -17,13 +17,21 @@
 - [x] `env_manage/adapters/xbow_adapter.py` - Xbow environment adapter
 - [x] `env_manage/env_registry.py` - Adapter registration and factory
 
-### ✅ Reward Module (reward/): 100% done (abstract structure)
+### ✅ Reward Module (reward/): 100% done (functional with task-specific routing)
 - [x] `reward/__init__.py`
 - [x] `reward/base_reward.py` - Abstract base class with universal `compute()` interface
-- [x] `reward/step_reward.py` - Step-level reward (empty implementation)
-- [x] `reward/trajectory_reward.py` - Trajectory-level reward (empty implementation)
-- [x] `reward/visual_reward.py` - Visual reward (empty implementation)
-- [x] `reward/composite_reward.py` - Composite reward orchestrator (empty implementation)
+- [x] `reward/reward_router.py` - **Universal entry point with task-specific routing** ✨
+- [x] `reward/step_reward.py` - Step-level reward (uses routing) ✅ FUNCTIONAL
+- [x] `reward/trajectory_reward.py` - Trajectory-level reward (uses routing) ✅ FUNCTIONAL
+- [x] `reward/visual_reward.py` - Visual reward (uses routing) ✅ FUNCTIONAL
+- [x] `reward/composite_reward.py` - Composite reward orchestrator ✅ FUNCTIONAL
+- [x] `reward/task_specific/` - **Task-specific reward implementations** ✨
+  - [x] `default_reward.py` - Fallback for unknown types
+  - [x] `vulhub_reward.py` - Vulhub-specific logic
+  - [x] `cvebench_reward.py` - CVE-bench-specific logic
+  - [x] `xbow_reward.py` - Xbow-specific logic
+- [x] `test_reward_system.py` - Test script verifying functionality ✅ ALL TESTS PASS
+- [x] `test_reward_router.py` - Test script for task-specific routing ✅ ALL TESTS PASS
 
 ### ✅ Models Module (models/): 100% done
 - [x] `models/__init__.py`

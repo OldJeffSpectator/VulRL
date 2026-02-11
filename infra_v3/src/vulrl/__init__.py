@@ -1,17 +1,13 @@
+# src/vulrl/__init__.py
 """
-VulRL - Unified Security RL Training Framework
-"""
+VulRL - Vulnerability RL Training Framework
 
-from .env import SecurityEnv, TestEnv
-from .reward import RewardOrchestrator
-from .models import LoRAModel, cve_lora_provider
+Main package for VulRL training and evaluation.
+"""
 
 __version__ = "0.1.0"
 
-__all__ = [
-    "SecurityEnv",
-    "TestEnv",
-    "RewardOrchestrator",
-    "LoRAModel",
-    "cve_lora_provider",
-]
+# Public API exports will be populated as components are created
+# Currently avoiding imports that don't exist to prevent ModuleNotFoundError
+
+__all__ = []
