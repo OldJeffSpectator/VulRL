@@ -46,15 +46,12 @@ class ProgressMonitor:
                 desc=f"[{display_id}]",
                 position=idx,
                 leave=True,
-                bar_format='{desc} Ep {postfix[episode]:>3}/{postfix[max_ep]:<3} | Step {postfix[step]:>2}/{postfix[max_steps]:<2} ({percentage:3.0f}%) |{bar}|'
+                ncols=120
             )
             
-            bar.set_postfix({
-                'episode': 0,
-                'max_ep': self.max_episodes,
-                'step': 0,
-                'max_steps': 30
-            })
+            bar.set_postfix_str(
+                f"Ep 0/{self.max_episodes} | Step 0/30 (0%)"
+            )
             
             self.bars[task_id] = bar
         
@@ -76,12 +73,9 @@ class ProgressMonitor:
             
             # Update bar
             bar.n = percentage
-            bar.set_postfix({
-                'episode': episode,
-                'max_ep': self.max_episodes,
-                'step': step,
-                'max_steps': max_steps
-            })
+            bar.set_postfix_str(
+                f"Ep {episode}/{self.max_episodes} | Step {step}/{max_steps} ({percentage}%)"
+            )
             bar.refresh()
     
     def close_bars(self) -> None:
