@@ -1,6 +1,5 @@
 """SkyRL integration wrapper."""
 
-import ray
 from typing import Dict, Any, Optional
 from gymnasium import register
 
@@ -31,12 +30,12 @@ def create_skyrl_env(config: Dict[str, Any]):
     return env_id
 
 
-@ray.remote(num_cpus=1)
 def skyrl_entrypoint(config: Dict[str, Any]) -> Dict[str, Any]:
     """
-    SkyRL training entry point (runs in Ray worker).
+    SkyRL training entry point.
     
-    This function is called by Ray workers for distributed training.
+    This function is called by worker processes for training.
+    Note: Ray is used internally by SkyRL, not at this level.
     
     Args:
         config: Training configuration including:
@@ -120,8 +119,7 @@ def run_skyrl_training(
         **kwargs
     }
     
-    # Run training via Ray
-    result_ref = skyrl_entrypoint.remote(config)
-    result = ray.get(result_ref)
+    # Run training directly (Ray is used internally by SkyRL)
+    result = skyrl_entrypoint(config)
     
     return result
