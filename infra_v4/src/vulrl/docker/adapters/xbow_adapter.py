@@ -14,8 +14,8 @@ from typing import Tuple, Dict, Any
 import tempfile
 import docker
 
-from .env_adapter import BaseEnvAdapter
-from .env_types import StandardAction, ActionType
+from ..base.env_adapter import BaseEnvAdapter
+from ..base.env_types import StandardAction, ActionType
 
 
 class XbowAdapter(BaseEnvAdapter):
