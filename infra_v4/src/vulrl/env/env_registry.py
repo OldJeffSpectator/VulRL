@@ -67,9 +67,9 @@ class EnvRegistry:
 def _register_default_adapters():
     """Register default adapters on module import."""
     try:
-        from vulrl.docker.adapters import CVEBenchAdapter, VulhubAdapter, XbowAdapter
+        from vulrl.docker.adapters import CveBenchAdapter, VulhubAdapter, XbowAdapter
         
-        EnvRegistry.register('cvebench', CVEBenchAdapter)
+        EnvRegistry.register('cvebench', CveBenchAdapter)
         EnvRegistry.register('vulhub', VulhubAdapter)
         EnvRegistry.register('xbow', XbowAdapter)
         
