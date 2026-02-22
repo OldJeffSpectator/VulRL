@@ -27,7 +27,7 @@ VulRL/
 ├── README.md                          # 本文档
 ├── dataset/                           # 数据集模块
 │   ├── vulhub_dataset_builder.py     # Vulhub 数据集构建器
-│   ├── dataset_converter.py          # 统一格式转换工具 (NEW)
+│   ├── dataset_converter.py          # 统一格式转换工具 (支持 skyrl/ctf-skyrl 子命令)
 │   └── cve_vulhub/                   # 生成的训练数据
 │       └── train.parquet             # Vulhub 训练数据集
 ├── infra/                             # 训练和测试基础设施
@@ -152,29 +152,114 @@ export OPENAI_API_KEY="your-openai-api-key"
 - **统一环境详细指南**：[infra/UNIFIED_ENV_GUIDE.md](infra/UNIFIED_ENV_GUIDE.md)
   - API 参考、混合训练、故障排除、扩展指南
 
-### Step 0: 数据转换（新增）
+### Step 0: 数据构建与转换
 
-**将现有数据转换为统一格式**，支持混合训练：
+完整的数据流水线包含两步：**构建 24 列原始数据** → **转换为 SkyRL 7 列统一格式**。
+
+#### 方式 A：从零构建（推荐）
+
+适用于首次使用或需要处理新 CVE 的场景。
 
 ```bash
-# 1. 转换 Vulhub 数据集（如果已有 train.parquet）
-python dataset/dataset_converter.py vulhub \
+cd ~/PycharmProjects/SecurityRL/VulRL/dataset
+
+# 第 1 步：用 builder 生成 24 列 parquet（需要 OpenAI API Key）
+python vulhub_dataset_builder.py \
+    --vulhub_path ~/vulhub \
+    --output_dir ~/data/cve_vulhub_raw
+
+# 第 2 步：转换为 SecurityEnv 7 列 SkyRL 格式
+python dataset_converter.py skyrl \
+    --input ~/data/cve_vulhub_raw/train.parquet \
+    --output ~/data/cve_vulhub_skyrl/train.parquet \
+    --vulhub-base-dir ~/vulhub
+```
+
+只处理指定 CVE（测试用）：
+```bash
+# 创建只包含目标 CVE 的 vulhub 子集
+mkdir -p /tmp/vulhub_subset/h2database
+ln -sf ~/vulhub/h2database/CVE-2022-23221 /tmp/vulhub_subset/h2database/
+ln -sf ~/vulhub/h2database/CVE-2018-10054 /tmp/vulhub_subset/h2database/
+
+# 用子集跑 builder
+python vulhub_dataset_builder.py \
+    --vulhub_path /tmp/vulhub_subset \
+    --output_dir ~/data/cve_h2_test
+
+# 转换
+python dataset_converter.py skyrl \
+    --input ~/data/cve_h2_test/train.parquet \
+    --output ~/data/cve_h2_test_skyrl/train.parquet
+```
+
+#### 方式 B：转换为 JSON 配置（旧方式）
+
+```bash
+# Vulhub → JSON
+python dataset_converter.py vulhub \
     --input ~/data/cve_vulhub/train.parquet \
     --output ~/unified_tasks/vulhub \
     --format json
 
-# 2. 转换 CVE-bench 数据
-python dataset/dataset_converter.py cvebench \
+# CVE-bench → JSON
+python dataset_converter.py cvebench \
     --input ~/benchmark/cve-bench \
     --output ~/unified_tasks/ctf \
     --variant zero_day
-
-# 3. 查看转换结果
-ls ~/unified_tasks/vulhub/  # CVE-XXXX-YYYY.json
-ls ~/unified_tasks/ctf/     # CVE-XXXX-YYYY.json
 ```
 
-> **注意**：如果是首次使用，请先完成 Step 1 构建 Vulhub 数据集，再进行转换。
+#### 方式 C：CTF → SkyRL 格式
+
+```bash
+python dataset_converter.py ctf-skyrl \
+    --input ~/benchmark/cve-bench \
+    --output ~/data/ctf_skyrl/train.parquet \
+    --variant zero_day
+```
+
+#### 验证转换结果
+
+```bash
+python -c "
+import pandas as pd, json
+df = pd.read_parquet('~/data/cve_vulhub_skyrl/train.parquet')
+print(f'列: {list(df.columns)}')
+print(f'行数: {len(df)}')
+row = df.iloc[0]
+print(f'env_class: {row[\"env_class\"]}')
+config = json.loads(row['env_config'])
+print(f'task_type: {config[\"task_type\"]}')
+print(f'target: {config[\"target_host\"]}:{config[\"target_port\"]}')
+poc = json.loads(row['poc_info'])
+print(f'poc_info keys: {list(poc.keys())}')
+"
+```
+
+#### SkyRL 7 列输出 Schema
+
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| `prompt` | str (JSON) | system + user message（不泄露漏洞类型） |
+| `env_class` | str | 固定 `"security_env.SecurityEnv"` |
+| `env_config` | str (JSON) | StandardEnvConfig 格式（含 task_id/target/evaluation_config/poc_info/backend_config） |
+| `poc_info` | str (JSON) | 独立列，SecurityEnv._parse_config() 单独读取，用于 Reward 计算 |
+| `tools` | str (JSON) | bash + http_request 工具定义 |
+| `task_id` | str | CVE 编号 |
+| `metadata` | str (JSON) | cve_id, source, vulhub_path 等元信息 |
+
+**数据流**：
+```
+SkyRL PromptDataset.__getitem__()
+  → pop "prompt" 和 "env_class"
+  → 剩余 5 列打包为 extras dict
+  → SecurityEnv.__init__(extras=extras)
+  → SecurityEnv._parse_config():
+      extras["env_config"] → JSON parse → StandardEnvConfig
+      extras["poc_info"]   → JSON parse → 用于 Reward 计算
+```
+
+> **注意**：旧的 6 列格式（CVEExploitEnv）缺少 poc_info 等关键字段，无法用于 SecurityEnv。必须从 24 列原始数据转换。
 
 ### Step 1: 构建 Vulhub 数据集
 
@@ -214,15 +299,17 @@ export WANDB_API_KEY="your-wandb-key"
 python infra/train_launcher.py
 ```
 
-#### 选项 B：混合训练（推荐，利用统一环境）
+#### 选项 B：混合训练（推荐，利用统一环境 + SkyRL 格式）
 
-修改 `train_launcher.py` 的数据路径配置：
+确保已完成 Step 0 生成 SkyRL 7 列 parquet，然后修改 `train_launcher.py` 的数据路径配置：
 
 ```python
-# 在 build_command() 方法中
+# 在 build_command() 方法中，指向 SkyRL 格式的 parquet
 params = [
-    # 混合 Vulhub 和 CTF 数据
-    f"++data.train_data=['{vulhub_config_dir}/*.json', '{ctf_config_dir}/*.json']",
+    # 使用 SecurityEnv 统一格式数据
+    f"++data.train_data='{skyrl_data_dir}/train.parquet'",
+    # 或混合 Vulhub 和 CTF 数据
+    f"++data.train_data=['{vulhub_skyrl_dir}/train.parquet', '{ctf_skyrl_dir}/train.parquet']",
     # ...其他参数
 ]
 ```
@@ -564,6 +651,37 @@ VulhubScanner → ContentParser → PoCGenerator → PoCValidator → DatasetWri
 | `validation_notes` | str | 验证说明 |
 | `generation_model` | str | 使用的 LLM 模型 |
 | `generation_timestamp` | str | 生成时间 (ISO 格式) |
+
+### dataset_converter.py
+
+数据格式转换工具，支持多种输入输出格式。
+
+**子命令**：
+
+| 子命令 | 输入 | 输出 | 说明 |
+|--------|------|------|------|
+| `skyrl` | 24 列 Vulhub parquet | 7 列 SkyRL parquet | **推荐**，供 SecurityEnv 训练使用 |
+| `ctf-skyrl` | CVE-bench 目录 | 7 列 SkyRL parquet | CTF 数据的 SkyRL 格式转换 |
+| `vulhub` | 24 列 Vulhub parquet | JSON 配置文件 | 旧格式，逐 CVE 输出 JSON |
+| `cvebench` | CVE-bench 目录 | JSON 配置文件 | 旧格式，逐 challenge 输出 JSON |
+| `custom-ctf` | 自定义 CTF JSON | JSON 配置文件 | 自定义 CTF 格式转换 |
+
+**skyrl 子命令参数**：
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `--input` | 必填 | 24 列 train.parquet 路径 |
+| `--output` | 必填 | 输出 parquet 文件路径 |
+| `--vulhub-base-dir` | `~/vulhub` | Vulhub 仓库根目录（用于扫描 ground-truth 图片） |
+
+**主要类与方法**：
+
+| 类 | 方法 | 说明 |
+|----|------|------|
+| `VulhubToUnifiedConverter` | `to_skyrl_parquet()` | 24 列 → 7 列 SkyRL parquet |
+| `VulhubToUnifiedConverter` | `convert()` | 24 列 → JSON（旧方式） |
+| `CTFToUnifiedConverter` | `ctf_to_skyrl_parquet()` | CVE-bench → 7 列 SkyRL parquet |
+| `CTFToUnifiedConverter` | `convert_cvebench()` | CVE-bench → JSON（旧方式） |
 
 ### cve_exploit_env.py
 
