@@ -296,7 +296,7 @@ uv run --directory .. --extra $INFERENCE_BACKEND \
   ++trainer.placement.policy_num_nodes=1 \
   ++trainer.placement.policy_num_gpus_per_node=$NUM_GPUS \
   ++trainer.placement.ref_num_nodes=1 \
-  ++trainer.placement.ref_num_gpus_per_node=1 \
+  ++trainer.placement.ref_num_gpus_per_node=$NUM_GPUS \
   ++trainer.placement.critic_num_nodes=1 \
   ++trainer.placement.critic_num_gpus_per_node=$NUM_GPUS \
   ++trainer.placement.reward_num_nodes=1 \
