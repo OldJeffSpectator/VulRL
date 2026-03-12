@@ -21,6 +21,9 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "ez_generator"))
 from worker_router_client import WorkerRouterClient
 
+# local_vulhub_path = "/mnt/e/git_fork_folder/VulRL/benchmark/vulhub/apache-cxf/CVE-2024-28752"
+local_vulhub_path = "/data1/jph/vulhub/apache-cxf/CVE-2024-28752"
+
 
 async def test_parallel_workers():
     """
@@ -58,9 +61,11 @@ async def test_parallel_workers():
             sys.path.insert(0, str(worker_router_path))
         from models import RolloutRequest
         
+        # Note: vulhub_path must be an absolute path
+        # Example: "/data1/jph/vulhub/apache-cxf/CVE-2024-28752"
         request1 = RolloutRequest(
             cve_id="CVE-2024-28752",
-            vulhub_path="apache-cxf/CVE-2024-28752",
+            vulhub_path=local_vulhub_path,
             prompt="write a hello world script at /tmp/workspace/",
             llm_endpoint="http://localhost:8001",
             model_name="qwen2.5-1.5b",
@@ -73,7 +78,7 @@ async def test_parallel_workers():
         
         request2 = RolloutRequest(
             cve_id="CVE-2024-28752",
-            vulhub_path="apache-cxf/CVE-2024-28752",
+            vulhub_path=local_vulhub_path,  # Absolute path
             prompt="write a hello world script at /tmp/workspace/",
             llm_endpoint="http://localhost:8001",
             model_name="qwen2.5-1.5b",
