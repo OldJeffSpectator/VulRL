@@ -281,9 +281,59 @@ See `test/ez_generator/README.md` for detailed test documentation.
 2. **Network Dependency**: Requires reliable network connection
 3. **Complexity**: More moving parts (Worker Router, Redis, Workers)
 
+## SkyRL Integration (NEW!)
+
+The EzVulRL Generator now has **full SkyRL training integration**! 🎉
+
+### Quick Start
+
+```bash
+# On remote machine (/data1/jph/)
+cd /data1/jph/VulRL/worker_orchestrator/ez_generator
+bash run_vulrl_skyrl.sh
+```
+
+This will:
+1. Sync code to SkyRL directory structure
+2. Check prerequisites (services, data, model)
+3. Launch training with minimal settings (1 epoch, 3 parallel tasks)
+
+### New Files
+
+1. **`main_vulrl_skyrl.py`** - SkyRL entry point with `VulrlPPOExp` class
+2. **`create_parquet.py`** - Convert VulRL tasks to Parquet format
+3. **`run_vulrl_skyrl.sh`** - Training launcher script
+4. **`SKYRL_INTEGRATION.md`** - Comprehensive integration guide
+5. **`COMMUNICATION_FLOW.md`** - Detailed timing and connection diagrams
+6. **`IMPLEMENTATION_SUMMARY.md`** - Implementation overview
+
+### Documentation
+
+📚 **[SKYRL_INTEGRATION.md](./SKYRL_INTEGRATION.md)** - Start here for full setup guide
+
+📊 **[COMMUNICATION_FLOW.md](./COMMUNICATION_FLOW.md)** - Timing diagrams from test_simple to LLM
+
+📋 **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Quick reference and overview
+
+### Key Features
+
+- ✅ **Drop-in Replacement**: Inherits from `SkyRLGymGenerator`
+- ✅ **Distributed Execution**: Rollouts run on auto-scaled Worker Units
+- ✅ **Parallel Processing**: Multiple tasks execute simultaneously
+- ✅ **Easy Configuration**: Environment variables + Hydra overrides
+
+### Architecture
+
+```
+SkyRL Trainer → EzVulRLGenerator → Worker Router → Worker Units → Docker + LLM
+   (PPO)         (HTTP Client)       (FastAPI)      (Subprocess)   (Vulhub + vLLM)
+```
+
+See **[COMMUNICATION_FLOW.md](./COMMUNICATION_FLOW.md)** for detailed diagrams.
+
 ## Next Steps
 
-1. **Full SkyRL Integration**: Test in actual training loop
+1. ✅ **SkyRL Integration**: Complete! See docs above
 2. **Performance Optimization**: Reduce polling overhead
 3. **Batch Processing**: Support multiple rollouts per HTTP request
 4. **Error Recovery**: Handle worker crashes gracefully
