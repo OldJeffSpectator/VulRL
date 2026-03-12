@@ -21,7 +21,8 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "ez_generator"))
 from worker_router_client import WorkerRouterClient
 
-local_vulhub_path = "/mnt/e/git_fork_folder/VulRL/benchmark/vulhub/apache-cxf/CVE-2024-28752"
+# local_vulhub_path = "/mnt/e/git_fork_folder/VulRL/benchmark/vulhub/apache-cxf/CVE-2024-28752"
+local_vulhub_path = "/data1/jph/vulhub/apache-cxf/CVE-2024-28752"
 
 
 async def test_parallel_workers():
