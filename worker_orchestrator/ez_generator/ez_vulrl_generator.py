@@ -53,13 +53,9 @@ class EzVulRLGenerator(SkyRLGymGenerator):
         self,
         generator_cfg: Union[GeneratorConfig, DictConfig],
         skyrl_gym_cfg: Union[SkyRLGymConfig, DictConfig],
-        inference_engine_client: InferenceEngineClient,  # Will be IGNORED
+        inference_engine_client: InferenceEngineClient,
         tokenizer,
         model_name: str,
-        worker_router_url: str = "http://localhost:5000",
-        llm_endpoint: str = "http://localhost:8001",
-        llm_model_name: str = "qwen2.5-1.5b",
-        polling_config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the generator.
@@ -67,31 +63,42 @@ class EzVulRLGenerator(SkyRLGymGenerator):
         Args:
             generator_cfg: Generator configuration from SkyRL
             skyrl_gym_cfg: SkyRL Gym configuration
-            inference_engine_client: InferenceEngineClient (IGNORED - we use ez_llm_server)
+            inference_engine_client: InferenceEngineClient for extracting LLM endpoint info
             tokenizer: Tokenizer for converting text to token IDs
             model_name: Model name for logging
-            worker_router_url: URL of the Worker Router API
-            llm_endpoint: URL of the LLM server (ez_llm_server)
-            llm_model_name: Model name served by LLM server
-            polling_config: Polling configuration (timeout, interval, etc.)
         """
         # Call parent constructor
         super().__init__(generator_cfg, skyrl_gym_cfg, inference_engine_client, tokenizer, model_name)
         
-        # Worker Router configuration
-        self.worker_router_url = worker_router_url
-        self.llm_endpoint = llm_endpoint
-        self.llm_model_name = llm_model_name
+        # Extract LLM endpoint info from InferenceEngineClient
+        self.llm_endpoint_host = inference_engine_client.http_endpoint_host
+        self.llm_endpoint_port = inference_engine_client.http_endpoint_port
+        self.llm_endpoint = f"http://{self.llm_endpoint_host}:{self.llm_endpoint_port}"
+        self.llm_model_name = inference_engine_client.model_name
         
-        # Polling configuration
-        self.polling_config = polling_config or {
-            "timeout": 600.0,        # 10 minutes max per rollout
-            "poll_interval": 10.0,   # Check status every 10 seconds
-            "verbose": True,         # Print polling progress
+        # Initialize Worker Router client with hardcoded default
+        # Note: Worker Router URL is NOT configurable - it always uses the default
+        # from WorkerRouterClient (http://localhost:5000)
+        self.worker_router_client = WorkerRouterClient()
+        self.worker_router_url = self.worker_router_client.base_url
+        
+        # Polling configuration (with defaults)
+        if hasattr(generator_cfg, "get"):
+            # DictConfig
+            timeout = generator_cfg.get("rollout_timeout", 600.0)
+            poll_interval = generator_cfg.get("poll_interval", 10.0)
+            verbose = generator_cfg.get("polling_verbose", True)
+        else:
+            # Dataclass (GeneratorConfig)
+            timeout = getattr(generator_cfg, "rollout_timeout", 600.0)
+            poll_interval = getattr(generator_cfg, "poll_interval", 10.0)
+            verbose = getattr(generator_cfg, "polling_verbose", True)
+        
+        self.polling_config = {
+            "timeout": timeout,
+            "poll_interval": poll_interval,
+            "verbose": verbose,
         }
-        
-        # Initialize Worker Router client
-        self.worker_router_client = WorkerRouterClient(worker_router_url)
         
         # Store config for later use
         self.generator_cfg = generator_cfg

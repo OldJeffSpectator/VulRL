@@ -123,28 +123,26 @@ result = await generator.vulrl_agent_loop(
 
 ### Integration with SkyRL
 
-Replace the generator in SkyRL's training config:
+The generator follows SkyRL conventions and extracts configuration from standard sources:
 
 ```python
-# In your SkyRL training script
-from ez_generator import EzVulRLGenerator
+# In your SkyRL training script (e.g., main_vulrl_skyrl.py)
+class VulrlPPOExp(BasePPOExp):
+    def get_generator(self, cfg, tokenizer, inference_engine_client):
+        generator = EzVulRLGenerator(
+            generator_cfg=cfg.generator,                    # Contains worker_router_url, polling config
+            skyrl_gym_cfg=OmegaConf.create({"max_env_workers": 0}),
+            inference_engine_client=inference_engine_client,  # Contains LLM endpoint & model name
+            tokenizer=tokenizer,
+            model_name=self.cfg.trainer.policy.model.path,
+        )
+        return generator
 
-generator = EzVulRLGenerator(
-    generator_cfg=config.generator,
-    skyrl_gym_cfg=config.skyrl_gym,
-    inference_engine_client=inference_engine_client,  # Will be ignored
-    tokenizer=tokenizer,
-    model_name=model_name,
-    worker_router_url="http://localhost:5000",
-    llm_endpoint="http://localhost:8001",
-    llm_model_name="qwen2.5-1.5b",
-)
-
-# Use in training loop (same as any SkyRL generator)
-for epoch in range(num_epochs):
-    input_batch = get_training_batch()
-    output = await generator.generate(input_batch)
-    # ... continue with training ...
+# Generator automatically extracts:
+# - LLM endpoint from inference_engine_client.http_endpoint_host/port
+# - Model name from inference_engine_client.model_name
+# - Worker Router URL from cfg.generator.worker_router_url
+# - Polling config from cfg.generator.rollout_timeout/poll_interval
 ```
 
 ## Configuration
@@ -277,9 +275,12 @@ See `test/ez_generator/README.md` for detailed test documentation.
 
 ## Limitations
 
-1. **Latency**: HTTP polling adds ~10s overhead per rollout
-2. **Network Dependency**: Requires reliable network connection
-3. **Complexity**: More moving parts (Worker Router, Redis, Workers)
+1. **Worker Router URL**: Hardcoded to `http://localhost:5000` (not configurable via SkyRL config)
+   - To use a different URL, modify `WorkerRouterClient.__init__` default in `worker_router_client.py`
+   - Or use SSH port forwarding: `ssh -L 5000:remote-host:5000 remote-host`
+2. **Latency**: HTTP polling adds ~10s overhead per rollout
+3. **Network Dependency**: Requires reliable network connection
+4. **Complexity**: More moving parts (Worker Router, Redis, Workers)
 
 ## SkyRL Integration (NEW!)
 
@@ -297,6 +298,8 @@ This will:
 1. Sync code to SkyRL directory structure
 2. Check prerequisites (services, data, model)
 3. Launch training with minimal settings (1 epoch, 3 parallel tasks)
+
+**⚠️ Important**: Worker Router must be running at `http://localhost:5000` (hardcoded default)
 
 ### New Files
 
