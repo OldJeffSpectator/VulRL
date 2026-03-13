@@ -9,6 +9,11 @@ set -e  # Exit on error
 # 2. Sets up environment variables
 # 3. Launches SkyRL training with EzVulRLGenerator (Worker Router based)
 #
+# IMPORTANT PREREQUISITE:
+#   Worker Router MUST be running at http://localhost:5000 (hardcoded)
+#   If running on a remote machine, use SSH port forwarding:
+#     ssh -L 5000:remote-host:5000 remote-host
+#
 # Usage:
 #   bash run_vulrl_skyrl.sh
 #
@@ -25,7 +30,13 @@ MODEL_PATH="${MODEL_PATH:-/data1/jph/models/qwen2.5-1.5b}"
 MODEL_NAME="${MODEL_NAME:-qwen2.5-1.5b}"
 
 # Worker Router configuration
-WORKER_ROUTER_URL="${WORKER_ROUTER_URL:-http://localhost:5000}"
+# IMPORTANT: Worker Router URL is HARDCODED to http://localhost:5000 in WorkerRouterClient
+# It is NOT configurable via this script or Hydra config
+# If Worker Router runs on a different host/port, use SSH port forwarding:
+#   ssh -L 5000:remote-host:5000 remote-host
+WORKER_ROUTER_URL="http://localhost:5000"  # Hardcoded (for display only)
+
+# LLM Endpoint configuration (configurable)
 LLM_ENDPOINT_HOST="${LLM_ENDPOINT_HOST:-localhost}"
 LLM_ENDPOINT_PORT="${LLM_ENDPOINT_PORT:-30000}"
 
@@ -265,13 +276,13 @@ uv run --extra vllm \
   trainer.run_name="$RUN_NAME" \
   trainer.resume_mode=null \
   trainer.ckpt_path="$CHECKPOINT_DIR" \
-  +generator.worker_router_url="$WORKER_ROUTER_URL" \
-  +generator.http_endpoint_host="$LLM_ENDPOINT_HOST" \
-  +generator.http_endpoint_port=$LLM_ENDPOINT_PORT \
-  +generator.rollout_timeout=$ROLLOUT_TIMEOUT \
-  +generator.poll_interval=$POLL_INTERVAL \
-  +generator.polling_verbose=true \
   "$@"
+# comment out configures
+#   +generator.http_endpoint_host="$LLM_ENDPOINT_HOST" \
+#   +generator.http_endpoint_port=$LLM_ENDPOINT_PORT \
+#   +generator.rollout_timeout=$ROLLOUT_TIMEOUT \
+#   +generator.poll_interval=$POLL_INTERVAL \
+#   +generator.polling_verbose=true \
 
 echo ""
 echo "============================================================"

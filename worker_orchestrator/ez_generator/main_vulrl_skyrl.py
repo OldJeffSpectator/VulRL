@@ -8,9 +8,25 @@ instead of local environment execution.
 Usage:
     uv run -m vulrl_inside_skyrl_v2.main_vulrl_skyrl \
         data.train_data="['/path/to/train.parquet']" \
-        generator.worker_router_url="http://localhost:5000" \
-        generator.http_endpoint_host="localhost" \
-        generator.http_endpoint_port=8001
+        +generator.http_endpoint_host="localhost" \
+        +generator.http_endpoint_port=8001 \
+        +generator.rollout_timeout=600 \
+        +generator.poll_interval=10
+
+Configuration:
+    Worker Router (NOT configurable):
+    - Worker Router URL is HARDCODED to http://localhost:5000
+    - If running on a different host, use SSH port forwarding:
+      ssh -L 5000:remote-host:5000 remote-host
+    
+    VulRL-specific configs (use + prefix as they're not in standard GeneratorConfig):
+    - rollout_timeout: Max time per rollout in seconds (default: 600.0)
+    - poll_interval: Status check interval in seconds (default: 10.0)
+    - polling_verbose: Enable verbose polling logs (default: True)
+    
+    Standard SkyRL configs (no + prefix needed):
+    - http_endpoint_host: LLM server host (extracted from InferenceEngineClient)
+    - http_endpoint_port: LLM server port (extracted from InferenceEngineClient)
 """
 
 import hydra
@@ -40,48 +56,17 @@ class VulrlPPOExp(BasePPOExp):
         Args:
             cfg: Hydra configuration object
             tokenizer: Tokenizer for the model
-            inference_engine_client: InferenceEngineClient (will be ignored by VulRL generator)
+            inference_engine_client: InferenceEngineClient for extracting LLM endpoint info
             
         Returns:
             EzVulRLGenerator instance
         """
-        # Extract configuration
-        worker_router_url = cfg.generator.get("worker_router_url", "http://localhost:5000")
-        llm_endpoint_host = cfg.generator.get("http_endpoint_host", "localhost")
-        llm_endpoint_port = cfg.generator.get("http_endpoint_port", 8001)
-        llm_endpoint = f"http://{llm_endpoint_host}:{llm_endpoint_port}"
-        
-        # Extract model name from path (last part)
-        model_path = self.cfg.trainer.policy.model.path
-        model_name = model_path.split("/")[-1] if "/" in model_path else model_path
-        
-        # Polling configuration
-        polling_config = {
-            "timeout": cfg.generator.get("rollout_timeout", 600.0),      # 10 minutes default
-            "poll_interval": cfg.generator.get("poll_interval", 10.0),    # 10 seconds default
-            "verbose": cfg.generator.get("polling_verbose", True),
-        }
-        
-        print("=" * 80)
-        print("VulRL Generator Configuration")
-        print("=" * 80)
-        print(f"  Worker Router URL: {worker_router_url}")
-        print(f"  LLM Endpoint: {llm_endpoint}")
-        print(f"  Model Name: {model_name}")
-        print(f"  Polling Timeout: {polling_config['timeout']}s")
-        print(f"  Poll Interval: {polling_config['poll_interval']}s")
-        print("=" * 80)
-        
         generator = EzVulRLGenerator(
             generator_cfg=cfg.generator,
-            skyrl_gym_cfg=OmegaConf.create({"max_env_workers": 0}),  # No local workers needed
-            inference_engine_client=inference_engine_client,  # Will be ignored
+            skyrl_gym_cfg=OmegaConf.create({"max_env_workers": 0}),
+            inference_engine_client=inference_engine_client,
             tokenizer=tokenizer,
-            model_name=model_name,
-            worker_router_url=worker_router_url,
-            llm_endpoint=llm_endpoint,
-            llm_model_name=model_name,
-            polling_config=polling_config,
+            model_name=self.cfg.trainer.policy.model.path,
         )
         
         return generator
