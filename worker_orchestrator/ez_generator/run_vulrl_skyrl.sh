@@ -75,10 +75,10 @@ CHECKPOINT_DIR="${CHECKPOINT_DIR:-/data1/jph/ckpts/vulrl_skyrl_test}"
 # For 10GB on 98GB GPU: 10/98 ≈ 0.10
 # For 15GB on 98GB GPU: 15/98 ≈ 0.15
 # Default 0.15 (~15GB) - adjust based on available memory
-GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.15}"
+GPU_MEMORY_UTILIZATION=0.15
 
 # Logging
-LOGGER="${LOGGER:-local}"  # Options: local, wandb, tensorboard
+LOGGER="wandb"  # Options: local, wandb, tensorboard
 PROJECT_NAME="${PROJECT_NAME:-vulrl_skyrl}"
 RUN_NAME="${RUN_NAME:-vulrl_test_$(date +%Y%m%d_%H%M%S)}"
 
@@ -296,7 +296,9 @@ uv run --extra vllm \
   trainer.algorithm.use_kl_loss=true \
   generator.backend=vllm \
   generator.run_engines_locally=True \
-  generator.enable_http_endpoint=False \
+  generator.enable_http_endpoint=True \
+  generator.http_endpoint_host=0.0.0.0 \
+  generator.http_endpoint_port=17777 \
   generator.async_engine=true \
   generator.batched=true \
   generator.n_samples_per_prompt=1 \
