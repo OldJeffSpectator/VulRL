@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e  # Exit on error
 
-# Add uv to PATH
-# export PATH="$HOME/.local/bin:$PATH"
-
 # =============================================================================
 # VulRL SkyRL Training Launcher
 # =============================================================================
@@ -28,28 +25,9 @@ set -e  # Exit on error
 # Configuration Variables (Edit these for your setup)
 # -----------------------------------------------------------------------------
 
-# Path related configuration
-MODEL_NAME="${MODEL_NAME:-qwen2.5-1.5b}"
+# Model configuration
 MODEL_PATH="${MODEL_PATH:-/data1/jph/VulRL/models/qwen2.5-1.5b}"
-# Training data (fixed path as requested)
-TRAIN_DATA="/data1/jph/VulRL/SkyRL/skyrl-train/vulrl_inside_skyrl/train.parquet"
-CHECKPOINT_DIR="/data1/jph/ckpts/vulrl_skyrl_test"
-# Path configuration (CRITICAL - these must match your remote machine)
-WORKER_ORCHESTRATOR_PATH="/data1/jph/VulRL/worker_orchestrator"
-EZ_GENERATOR_PATH="$WORKER_ORCHESTRATOR_PATH/ez_generator"
-SKYRL_PATH="/data1/jph/VulRL/SkyRL/skyrl-train"
-VULRL_INSIDE_SKYRL_PATH="$SKYRL_PATH/vulrl_inside_skyrl_v2"
-
-# MODEL_PATH="${MODEL_PATH:-/mnt/e/git_fork_folder/VulRL/models/qwen2.5-1.5b}"
-# # Training data (fixed path as requested)
-# TRAIN_DATA="/mnt/e/git_fork_folder/VulRL/SkyRL/skyrl-train/vulrl_inside_skyrl/train.parquet"
-# CHECKPOINT_DIR="/mnt/e/git_fork_folder/VulRL/ckpts/vulrl_skyrl_test"
-# # Path configuration (CRITICAL - these must match your remote machine)
-# WORKER_ORCHESTRATOR_PATH="/mnt/e/git_fork_folder/VulRL/worker_orchestrator"
-# EZ_GENERATOR_PATH="$WORKER_ORCHESTRATOR_PATH/ez_generator"
-# SKYRL_PATH="/mnt/e/git_fork_folder/VulRL/SkyRL/skyrl-train"
-# VULRL_INSIDE_SKYRL_PATH="$SKYRL_PATH/vulrl_inside_skyrl_v2"
-# export RAY_TMPDIR="/mnt/e/tmp/ray_tmp"  # custome log path
+MODEL_NAME="${MODEL_NAME:-qwen2.5-1.5b}"
 
 # -----------------------------------------------------------------------------
 # DUAL INFERENCE ARCHITECTURE
@@ -75,6 +53,8 @@ VULRL_INSIDE_SKYRL_PATH="$SKYRL_PATH/vulrl_inside_skyrl_v2"
 #   ssh -L 12345:remote-host:12345 remote-host
 WORKER_ROUTER_URL="http://localhost:12345"  # Hardcoded (for display only)
 
+# Training data (fixed path as requested)
+TRAIN_DATA="${TRAIN_DATA:-/data1/jph/VulRL/SkyRL/skyrl-train/vulrl_inside_skyrl/train.parquet}"
 
 # Training parameters - MINIMAL FOR TESTING
 EPOCHS="${EPOCHS:-1}"                      # 1 epoch
@@ -88,19 +68,25 @@ LEARNING_RATE="${LEARNING_RATE:-1e-6}"
 #           Set to 1+ for GPU training (much faster, requires free GPU)
 # Check GPU availability: nvidia-smi
 NUM_GPUS="${NUM_GPUS:-1}"
+CHECKPOINT_DIR="${CHECKPOINT_DIR:-/data1/jph/ckpts/vulrl_skyrl_test}"
 
 # GPU Memory Configuration
 # VLLM gpu_memory_utilization: fraction of GPU memory to use for inference engine
 # For 10GB on 98GB GPU: 10/98 ≈ 0.10
 # For 15GB on 98GB GPU: 15/98 ≈ 0.15
 # Default 0.15 (~15GB) - adjust based on available memory
-GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.15}"
+GPU_MEMORY_UTILIZATION=0.15
 
 # Logging
-LOGGER="${LOGGER:-tensorboard}"  # Options: tensorboard, wandb (NOTE: "local" is not supported)
+LOGGER="wandb"  # Options: local, wandb, tensorboard
 PROJECT_NAME="${PROJECT_NAME:-vulrl_skyrl}"
 RUN_NAME="${RUN_NAME:-vulrl_test_$(date +%Y%m%d_%H%M%S)}"
 
+# Path configuration (CRITICAL - these must match your remote machine)
+WORKER_ORCHESTRATOR_PATH="/data1/jph/VulRL/worker_orchestrator"
+EZ_GENERATOR_PATH="$WORKER_ORCHESTRATOR_PATH/ez_generator"
+SKYRL_PATH="/data1/jph/VulRL/SkyRL/skyrl-train"
+VULRL_INSIDE_SKYRL_PATH="$SKYRL_PATH/vulrl_inside_skyrl_v2"
 
 # -----------------------------------------------------------------------------
 # Header
@@ -227,9 +213,6 @@ echo ""
 # Ray configuration - allow GPU sharing
 export RAY_EXPERIMENTAL_NOSET_CUDA_VISIBLE_DEVICES=1
 
-# Ray temp directory (easier to clean than /tmp/ray)
-export RAY_TMPDIR="${RAY_TMPDIR:-$HOME/ray_tmp}"
-
 # CUDA configuration
 export CUDA_VISIBLE_DEVICES=0
 
@@ -243,7 +226,6 @@ export PYTHONPATH="$SKYRL_PATH:${PYTHONPATH}"
 echo "✓ Environment configured"
 echo "  PYTHONPATH: $PYTHONPATH"
 echo "  CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
-echo "  RAY_TMPDIR: $RAY_TMPDIR"
 echo "  Training GPUs: $NUM_GPUS"
 echo "  Inference Engines: $NUM_GPUS (local VLLM)"
 echo "  GPU Memory Utilization: ${GPU_MEMORY_UTILIZATION}"
@@ -334,10 +316,5 @@ echo "Training completed!"
 echo "============================================================"
 echo ""
 echo "Checkpoints saved to: $CHECKPOINT_DIR"
-echo "Logs available in:"
-echo "  - Hydra logs: $SKYRL_PATH/outputs/"
-echo "  - Ray logs: $RAY_TMPDIR"
-echo ""
-echo "To clean up Ray temp files:"
-echo "  ray stop && rm -rf $RAY_TMPDIR"
+echo "Logs available in: $SKYRL_PATH/outputs/"
 echo ""
