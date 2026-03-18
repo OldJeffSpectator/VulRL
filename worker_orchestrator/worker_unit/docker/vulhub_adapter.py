@@ -28,7 +28,7 @@ class VulhubAdapter(BaseEnvAdapter):
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
         
-        vulhub_base_path = config.get("backend_config", {}).get("vulhub_base_path", "/data1/jph/vulhub")
+        vulhub_base_path = "/data1/jph/vulhub"
         vulhub_path = config.get("vulhub_path")
         
         if not vulhub_path:
