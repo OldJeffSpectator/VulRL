@@ -10,19 +10,22 @@ export OPENAI_API_KEY=$(cat /data1/jph/apikey.txt)
 # ============================================================================
 # Configuration
 # ============================================================================
-CVE_ID="CVE-2017-12635"
+CVE_PATH="couchdb/CVE-2017-12635"  # Format: category/cve_id
 RESULT_DIR="/data1/jph/tmp/result_v2_test"
 
+# Convert to flat folder name
+FOLDER_NAME=$(echo "$CVE_PATH" | tr '/' '_')  # "couchdb_CVE-2017-12635"
+
 # Clean previous results for this CVE
-rm -rf "${RESULT_DIR}/${CVE_ID}"
+rm -rf "${RESULT_DIR}/${FOLDER_NAME}"
 
 # ============================================================================
 # Run test
 # ============================================================================
-echo "========== Test: ${CVE_ID} =========="
+echo "========== Test: ${CVE_PATH} =========="
 python interactive_poc_generator.py \
   --vulhub-dir ~/vulhub \
-  --cve-filter "${CVE_ID}" \
+  --cve-filter "${CVE_PATH}" \
   --result-dir "${RESULT_DIR}" \
   --max-steps 30 \
   --service-wait 600
@@ -32,7 +35,7 @@ python interactive_poc_generator.py \
 # ============================================================================
 echo ""
 echo "========== Verifying Output =========="
-CVE_RESULT_DIR="${RESULT_DIR}/${CVE_ID}"
+CVE_RESULT_DIR="${RESULT_DIR}/${FOLDER_NAME}"
 
 # Check generated files
 echo "[1] Generated files:"
