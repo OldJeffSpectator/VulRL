@@ -11,7 +11,7 @@ export OPENAI_API_KEY=$(cat /data1/jph/apikey.txt)
 # Configuration
 # ============================================================================
 CVE_PATH="couchdb/CVE-2017-12635"  # Format: category/cve_id
-RESULT_DIR="/data1/jph/tmp/result_v2_test"
+RESULT_DIR="/data1/jph/tmp/result_v3"
 
 # Convert to flat folder name
 FOLDER_NAME=$(echo "$CVE_PATH" | tr '/' '_')  # "couchdb_CVE-2017-12635"
@@ -24,7 +24,7 @@ rm -rf "${RESULT_DIR}/${FOLDER_NAME}"
 # ============================================================================
 echo "========== Test: ${CVE_PATH} =========="
 python interactive_poc_generator.py \
-  --vulhub-dir ~/vulhub \
+  --vulhub-dir /data1/jph/vulhub \
   --cve-filter "${CVE_PATH}" \
   --result-dir "${RESULT_DIR}" \
   --max-steps 30 \
