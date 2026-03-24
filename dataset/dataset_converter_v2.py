@@ -12,6 +12,9 @@ python dataset_converter_v2.py \
   --output /data1/jph/VulRL/dataset/train_v4.parquet \
   --vulhub-base /data1/jph/vulhub
 
+the parquet generated should be manually transfered to desired location for usage
+e.g. /data1/jph/VulRL/worker_orchestrator/ez_generator/train_v4.parquet
+
 """
 
 import sys
