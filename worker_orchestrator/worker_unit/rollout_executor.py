@@ -141,6 +141,7 @@ class RolloutExecutor:
             llm_client = InferenceEngineClientWrapper(
                 endpoint=request.llm_endpoint,
                 model_name=request.model_name,
+                api_key=request.api_key,
             )
             print(f"[RolloutExecutor] LLM client ready: {request.llm_endpoint}")
 

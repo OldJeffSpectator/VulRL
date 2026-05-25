@@ -50,15 +50,18 @@ class InferenceEngineClientWrapper:
         self,
         endpoint: str = "http://127.0.0.1:8001",
         model_name: str = "Qwen/Qwen2.5-7B-Instruct",
+        api_key: Optional[str] = None,
     ):
         """Initialize client.
         
         Args:
             endpoint: vLLM server endpoint
             model_name: Model name (must match server)
+            api_key: Optional API key for authenticated endpoints
         """
         self.endpoint = endpoint.rstrip("/")
         self.model_name = model_name
+        self.api_key = api_key
     
     async def generate(self, input_batch: InferenceEngineInput) -> InferenceEngineOutput:
         """Generate responses for input batch.
@@ -156,8 +159,12 @@ class InferenceEngineClientWrapper:
         if stop is not None:
             payload["stop"] = stop
         
+        headers = {}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload) as resp:
+            async with session.post(url, json=payload, headers=headers) as resp:
                 if resp.status != 200:
                     error_text = await resp.text()
                     raise RuntimeError(

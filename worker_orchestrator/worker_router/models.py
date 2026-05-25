@@ -19,6 +19,7 @@ class RolloutRequest(BaseModel):
     model_name: str
     temperature: float = 0.7
     max_tokens: int = 512
+    api_key: Optional[str] = None
     metadata: Dict[str, Any] = {}
 
 
