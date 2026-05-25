@@ -252,13 +252,19 @@ class RolloutExecutor:
                             env.close()
                         
                         return RolloutResult(
-                            cve_id=request.cve_id,
+                            task_id=task_id,
                             status="failed",
+                            worker_id=None,
+                            queued_at=start_time,
+                            started_at=start_time,
+                            completed_at=time.time(),
+                            duration=time.time() - start_time,
                             reward=0.0,
                             success=False,
                             trajectory=[],
-                            duration=time.time() - start_time,
-                            error="oracle_flag_setup.sh failed - cannot proceed with read-based test"
+                            metadata=request.metadata,
+                            error="oracle_flag_setup.sh failed - cannot proceed with read-based test",
+                            error_type="OracleFlagSetupError",
                         )
                     
                     print(f"[RolloutExecutor] oracle_flag_setup.sh completed successfully")

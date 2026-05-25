@@ -256,26 +256,35 @@ async def collect(
                 print(f"[{n}/{total_jobs}] FAIL  {cve_id} trial={t_idx}  ({elapsed:.0f}s)  {error[:150]}")
             else:
                 completed_count += 1
-                record = {
-                    "cve_id": cve_id,
-                    "trial_idx": t_idx,
-                    "reward": result.get("reward"),
-                    "success": result.get("success"),
-                    "status": result.get("status"),
-                    "duration": result.get("duration"),
-                    "trajectory": result.get("trajectory"),
-                    "metadata": result.get("metadata"),
-                    "model_name": model_name,
-                    "llm_endpoint": llm_endpoint,
-                    "timestamp": datetime.now().isoformat(),
-                }
-                traj_fh.write(json.dumps(record, ensure_ascii=False) + "\n")
-                traj_fh.flush()
-                n = completed_count + failed_count
+                traj = result.get("trajectory")
+                steps = len(traj) if traj else 0
                 rw = result.get("reward")
                 rw_s = f"{rw:.2f}" if rw is not None else "N/A"
-                steps = len(result.get("trajectory") or [])
-                print(f"[{n}/{total_jobs}] OK    {cve_id} trial={t_idx}  reward={rw_s} steps={steps}  ({elapsed:.0f}s)")
+                n = completed_count + failed_count
+
+                if result.get("status") != "completed" or not traj:
+                    reason = result.get("status", "unknown") if result.get("status") != "completed" else "empty_trajectory"
+                    ts = datetime.now().isoformat()
+                    err_fh.write(f"[{ts}] cve_id={cve_id} trial={t_idx} skipped={reason}\n")
+                    err_fh.flush()
+                    print(f"[{n}/{total_jobs}] SKIP  {cve_id} trial={t_idx}  reward={rw_s} steps={steps}  ({elapsed:.0f}s)  {reason}")
+                else:
+                    record = {
+                        "cve_id": cve_id,
+                        "trial_idx": t_idx,
+                        "reward": rw,
+                        "success": result.get("success"),
+                        "status": result.get("status"),
+                        "duration": result.get("duration"),
+                        "trajectory": traj,
+                        "metadata": result.get("metadata"),
+                        "model_name": model_name,
+                        "llm_endpoint": llm_endpoint,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                    traj_fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    traj_fh.flush()
+                    print(f"[{n}/{total_jobs}] OK    {cve_id} trial={t_idx}  reward={rw_s} steps={steps}  ({elapsed:.0f}s)")
 
     tasks = [_run(ri, row, ti) for ri, row, ti in jobs]
     await asyncio.gather(*tasks)
