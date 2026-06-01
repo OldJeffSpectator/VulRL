@@ -1,0 +1,6 @@
+# vLLM dependencies (install separately due to size and proxy issues)
+
+# Install with: pip install -r requirements-llm.txt --no-cache-dir
+
+# Pinned to match worker_orchestrator venv (CUDA stack); bump when upgrading venv
+vllm==0.17.0
