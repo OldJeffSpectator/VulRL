@@ -272,6 +272,9 @@ async def collect(
                     record = {
                         "cve_id": cve_id,
                         "trial_idx": t_idx,
+                        "prompt": req.get("prompt"),
+                        "vulhub_path": req.get("vulhub_path"),
+                        "max_steps": req.get("max_steps"),
                         "reward": rw,
                         "success": result.get("success"),
                         "status": result.get("status"),

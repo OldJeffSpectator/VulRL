@@ -349,6 +349,7 @@ def _build_metadata(
 ) -> Dict[str, Any]:
     ctf_subtasks = list(ctf_subtasks or [])
     return {
+        "agent_type": "ctf",
         "task_id": task_id,
         "task_type": task_type,
         "challenge_relative_path": challenge_relative_path,
