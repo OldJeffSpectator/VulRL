@@ -1,3 +1,0 @@
-bplib
-petlib
-bls-lib

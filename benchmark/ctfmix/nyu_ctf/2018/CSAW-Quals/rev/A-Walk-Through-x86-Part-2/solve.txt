@@ -1,5 +1,0 @@
-Change the last jmp command, `jmp LOAD_ADDR` to the two lines:
-
-```
-jmp LOAD_ADDR + 1
-```

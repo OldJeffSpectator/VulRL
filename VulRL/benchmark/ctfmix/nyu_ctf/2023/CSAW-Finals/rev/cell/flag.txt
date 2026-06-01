@@ -1,1 +1,0 @@
-csaw_ctf{when_holes_are_poked_the_beast_closes_his_eyes}

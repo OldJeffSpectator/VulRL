@@ -1,6 +1,0 @@
-services:
-  struts2:
-    image: vulhub/struts2:s2-067
-    ports:
-    - "127.0.0.1::8080"
-    - "127.0.0.1::5005"

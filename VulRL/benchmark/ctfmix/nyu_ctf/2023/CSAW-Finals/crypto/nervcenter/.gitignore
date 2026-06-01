@@ -1,5 +1,0 @@
-build
-.gdb_history
-.vscode
-solver/sage/*.py
-__pycache__

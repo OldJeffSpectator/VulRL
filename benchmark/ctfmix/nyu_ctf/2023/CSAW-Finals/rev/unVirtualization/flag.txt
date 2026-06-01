@@ -1,1 +1,0 @@
-csawctf{E15_E20_xv6_x86_noice}

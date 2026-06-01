@@ -1,7 +1,0 @@
-services:
-  rmi:
-    build: .
-    ports:
-    - "127.0.0.1::1099"
-    environment:
-    - RMIIP=192.168.31.88

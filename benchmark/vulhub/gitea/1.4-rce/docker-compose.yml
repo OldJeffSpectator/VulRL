@@ -1,6 +1,0 @@
-services:
-  web:
-    image: vulhub/gitea:1.4.0
-    ports:
-    - "127.0.0.1::3000"
-    - "127.0.0.1::22"

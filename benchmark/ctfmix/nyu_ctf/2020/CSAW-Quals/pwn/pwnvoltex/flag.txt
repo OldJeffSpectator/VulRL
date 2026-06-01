@@ -1,1 +1,0 @@
-flag{even c++ is not safe from sqli :<<}

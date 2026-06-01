@@ -1,6 +1,0 @@
-version: '2'
-services:
-  redis:
-    image: vulhub/redis:4.0.14
-    ports:
-    - "127.0.0.1::6379"

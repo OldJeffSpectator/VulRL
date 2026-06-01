@@ -1,1 +1,0 @@
-flag{turns_out_heavens_gate_works_on_linux_too_yote}

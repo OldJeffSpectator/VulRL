@@ -1,5 +1,0 @@
-services:
-  php:
-    image: php:fpm
-    ports:
-    - "127.0.0.1::9000"

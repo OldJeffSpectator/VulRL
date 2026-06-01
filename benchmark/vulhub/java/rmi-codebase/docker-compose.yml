@@ -1,8 +1,0 @@
-services:
-  rmi:
-    build: .
-    ports:
-    - "127.0.0.1::1099"
-    - "127.0.0.1::64000"
-    environment:
-    - RMIIP=127.0.0.1
