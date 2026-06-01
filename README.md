@@ -45,9 +45,12 @@ VulRL/
 │   ├── UNIFIED_ENV_GUIDE.md          # 统一环境详细指南 (NEW)
 │   ├── test_unified_env.py           # 测试脚本 (NEW)
 │   └── pyproject.toml                # 项目配置
-├── benchmark/                         # 基准测试
+├── benchmark/                         # 本地基准数据目录（从 Hugging Face 下载，git 忽略）
 │   ├── cve-bench/                    # CVE-bench 仓库
-│   └── vulhub/                       # Vulhub 仓库
+│   ├── vulhub/                       # Vulhub 仓库
+│   └── VulRL/                        # VulRL benchmark 快照
+├── scripts/
+│   └── download_benchmark.sh         # 一键下载 benchmark 数据
 └── eval_results/                     # 测试结果目录
 ```
 
@@ -151,6 +154,29 @@ export OPENAI_API_KEY="your-openai-api-key"
 
 - **统一环境详细指南**：[infra/UNIFIED_ENV_GUIDE.md](infra/UNIFIED_ENV_GUIDE.md)
   - API 参考、混合训练、故障排除、扩展指南
+
+### Step -1: 下载 benchmark 数据
+
+benchmark 数据不再直接提交到 git，当前保存在 Hugging Face private dataset：
+`Elfsong/vulrl-benchmark`。
+
+确保 `.env` 或环境变量里有可访问该 private dataset 的 `HF_TOKEN`：
+
+```bash
+export HF_TOKEN="your-huggingface-token"
+```
+
+然后在仓库根目录运行：
+
+```bash
+./scripts/download_benchmark.sh
+```
+
+默认会下载到 `./benchmark/`。如果本地已有非空 `benchmark/`，脚本会拒绝覆盖；需要重新下载时运行：
+
+```bash
+./scripts/download_benchmark.sh --force
+```
 
 ### Step 0: 数据构建与转换
 

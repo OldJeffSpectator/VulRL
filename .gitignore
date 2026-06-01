@@ -66,6 +66,7 @@ logs/
 runs/
 
 # Dataset cache
+benchmark/
 *.parquet
 *.arrow
 *.cache
